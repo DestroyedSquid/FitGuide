@@ -1,0 +1,16 @@
+# Carpeta de compilación (esto es basura, no se sube)
+target/
+
+# Configuraciones de IntelliJ (cada quien tiene la suya)
+.idea/
+*.iml
+
+# Archivos de base de datos local (¡esto es vital!)
+# Si subes tu .db, cada vez que hagas cambios en tu compu, vas a sobreescribir la de tu compañero
+*.db
+*.db-wal
+*.db-shm
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
