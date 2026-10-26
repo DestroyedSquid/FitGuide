@@ -14,21 +14,18 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
 /**
- * Controlador de la pantalla completa para Agregar y Editar Ejercicios del Catálogo (Rol Coach).
- * Soporta AMBOS estilos de programación: PascalCase y camelCase.
+ * Controlador para la gestión de creación y edición de ejercicios en el catálogo del Coach.
  *
  * @author Coach Module — FitGuide
  */
 public class PantallaCoachFormularioEjercicioController implements Initializable {
 
-    // ── Variables Estáticas para Transferencia de Estado ─────────────────────
-    public static EjercicioCoach ejercicioAEditar = null;
     public static boolean modoEdicion = false;
+    public static EjercicioCoach ejercicioAEditar = null;
 
-    // ── Componentes de la Interfaz (Notación Húngara) ────────────────────────
+    @FXML private Button btnCancelar;
     @FXML private Label lblTituloPantalla;
     @FXML private Label lblSubtituloPantalla;
-
     @FXML private TextField txtNombre;
     @FXML private ComboBox<String> cmbZonaCorporal;
     @FXML private ComboBox<String> cmbNivel;
@@ -37,91 +34,49 @@ public class PantallaCoachFormularioEjercicioController implements Initializable
     @FXML private TextField txtSeries;
     @FXML private TextField txtDescanso;
     @FXML private TextField txtDuracion;
-    @FXML private TextArea txtDescripcion;
     @FXML private TextField txtUrlImagen;
     @FXML private TextField txtUrlVideo;
-
+    @FXML private TextArea txtDescripcion;
     @FXML private Button btnGuardar;
-    @FXML private Button btnCancelar;
 
     private final EjercicioCatalogoDao dao = new EjercicioCatalogoDao();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        InicializarCombos();
-
+        ConfigurarCombos();
         if (modoEdicion && ejercicioAEditar != null) {
-            ConfigurarModoEdicion();
-        } else {
-            ConfigurarModoCreacion();
+            CargarDatosEdicion(ejercicioAEditar);
         }
-
-        // Filtros para asegurar solo números en campos numéricos
-        txtRepeticiones.textProperty().addListener((obs, oldV, newV) -> {
-            if (!newV.matches("\\d*")) txtRepeticiones.setText(newV.replaceAll("[^\\d]", ""));
-        });
-        txtSeries.textProperty().addListener((obs, oldV, newV) -> {
-            if (!newV.matches("\\d*")) txtSeries.setText(newV.replaceAll("[^\\d]", ""));
-        });
-        txtDescanso.textProperty().addListener((obs, oldV, newV) -> {
-            if (!newV.matches("\\d*")) txtDescanso.setText(newV.replaceAll("[^\\d]", ""));
-        });
-        txtDuracion.textProperty().addListener((obs, oldV, newV) -> {
-            if (!newV.matches("\\d*")) txtDuracion.setText(newV.replaceAll("[^\\d]", ""));
-        });
     }
 
-    private void InicializarCombos() {
+    private void ConfigurarCombos() {
         cmbZonaCorporal.getItems().addAll("Brazo", "Abdomen", "Pierna");
-        cmbZonaCorporal.setValue("Brazo");
-
         cmbNivel.getItems().addAll("Básico", "Intermedio", "Avanzado");
-        cmbNivel.setValue("Básico");
-
         cmbTipoPeso.getItems().addAll("Peso Propio", "Peso Extra");
-        cmbTipoPeso.setValue("Peso Propio");
     }
 
-    private void ConfigurarModoCreacion() {
-        lblTituloPantalla.setText("Agregar Nuevo Ejercicio");
-        lblSubtituloPantalla.setText("Ingresa los datos del nuevo ejercicio para integrarlo al catálogo oficial");
-        btnGuardar.setText("💾 Guardar Nuevo Ejercicio");
+    private void CargarDatosEdicion(EjercicioCoach ejercicio) {
+        lblTituloPantalla.setText("Editar Ejercicio");
+        lblSubtituloPantalla.setText("Modifica los atributos del ejercicio seleccionado");
 
-        txtNombre.clear();
-        txtRepeticiones.setText("12");
-        txtSeries.setText("3");
-        txtDescanso.setText("30");
-        txtDuracion.setText("0");
-        txtDescripcion.clear();
-        txtUrlImagen.clear();
-        txtUrlVideo.clear();
+        txtNombre.setText(ejercicio.getNombre());
+        cmbZonaCorporal.setValue(ejercicio.getZonaCorporal());
+        cmbNivel.setValue(ejercicio.getNivel());
+        cmbTipoPeso.setValue(ejercicio.getTipoPeso());
+        txtRepeticiones.setText(String.valueOf(ejercicio.getRepeticiones()));
+        txtSeries.setText(String.valueOf(ejercicio.getSeries()));
+        txtDescanso.setText(String.valueOf(ejercicio.getDescanso()));
+        txtDuracion.setText(String.valueOf(ejercicio.getDuracion()));
+        txtUrlImagen.setText(ejercicio.getUrlImagen());
+        txtUrlVideo.setText(ejercicio.getUrlVideo());
+        txtDescripcion.setText(ejercicio.getDescripcion());
     }
-
-    private void ConfigurarModoEdicion() {
-        lblTituloPantalla.setText("Editar Ejercicio: " + ejercicioAEditar.getNombre());
-        lblSubtituloPantalla.setText("Modifica los atributos del ejercicio (ID: " + ejercicioAEditar.getIdEjercicio() + ")");
-        btnGuardar.setText("💾 Actualizar Ejercicio");
-
-        txtNombre.setText(ejercicioAEditar.getNombre());
-        cmbZonaCorporal.setValue(ejercicioAEditar.getZonaCorporal());
-        cmbNivel.setValue(ejercicioAEditar.getNivel());
-        cmbTipoPeso.setValue(ejercicioAEditar.getTipoPeso());
-        txtRepeticiones.setText(String.valueOf(ejercicioAEditar.getRepeticiones()));
-        txtSeries.setText(String.valueOf(ejercicioAEditar.getSeries()));
-        txtDescanso.setText(String.valueOf(ejercicioAEditar.getDescanso()));
-        txtDuracion.setText(String.valueOf(ejercicioAEditar.getDuracion()));
-        txtDescripcion.setText(ejercicioAEditar.getDescripcion());
-        txtUrlImagen.setText(ejercicioAEditar.getUrlImagen());
-        txtUrlVideo.setText(ejercicioAEditar.getUrlVideo());
-    }
-
-    // ── Acciones de Guardar y Cancelar (PascalCase y camelCase) ──────────────
 
     @FXML
     public void GuardarEjercicio(ActionEvent event) {
         String nombre = txtNombre.getText().trim();
         if (nombre.isEmpty()) {
-            MostrarAlerta("Campo Requerido", "El nombre del ejercicio es obligatorio.", Alert.AlertType.WARNING);
+            MostrarAlerta("Validación", "El nombre del ejercicio es obligatorio.", Alert.AlertType.WARNING);
             return;
         }
 
@@ -131,73 +86,74 @@ public class PantallaCoachFormularioEjercicioController implements Initializable
         int duracion = 0;
 
         try {
-            if (!txtRepeticiones.getText().trim().isEmpty()) reps = Integer.parseInt(txtRepeticiones.getText().trim());
-            if (!txtSeries.getText().trim().isEmpty()) series = Integer.parseInt(txtSeries.getText().trim());
-            if (!txtDescanso.getText().trim().isEmpty()) descanso = Integer.parseInt(txtDescanso.getText().trim());
-            if (!txtDuracion.getText().trim().isEmpty()) duracion = Integer.parseInt(txtDuracion.getText().trim());
+            if (!txtRepeticiones.getText().trim().isEmpty()) {
+                reps = Integer.parseInt(txtRepeticiones.getText().trim());
+            }
+            if (!txtSeries.getText().trim().isEmpty()) {
+                series = Integer.parseInt(txtSeries.getText().trim());
+            }
+            if (!txtDescanso.getText().trim().isEmpty()) {
+                descanso = Integer.parseInt(txtDescanso.getText().trim());
+            }
+            if (!txtDuracion.getText().trim().isEmpty()) {
+                duracion = Integer.parseInt(txtDuracion.getText().trim());
+            }
         } catch (NumberFormatException e) {
-            MostrarAlerta("Formato Inválido", "Por favor ingresa números válidos en repeticiones, series y descanso.", Alert.AlertType.ERROR);
+            MostrarAlerta("Error de Formato", "Revisa que los campos numéricos contengan valores válidos.", Alert.AlertType.ERROR);
             return;
         }
 
-        if (reps <= 0 || series <= 0) {
-            MostrarAlerta("Valores Fuera de Rango", "Las repeticiones y las series deben ser mayores a 0.", Alert.AlertType.WARNING);
-            return;
-        }
-
-        String zona = cmbZonaCorporal.getValue();
-        String nivel = cmbNivel.getValue();
-        String tipoPeso = cmbTipoPeso.getValue();
-        String descripcion = txtDescripcion.getText().trim();
-        String urlImagen = txtUrlImagen.getText().trim();
-        String urlVideo = txtUrlVideo.getText().trim();
-
+        boolean resultado;
         if (modoEdicion && ejercicioAEditar != null) {
-            // Modo Actualizar
-            EjercicioCoach actualizado = new EjercicioCoach(
-                ejercicioAEditar.getIdEjercicio(),
-                nombre, zona, nivel, tipoPeso,
-                reps, series, duracion, descanso,
-                descripcion, urlImagen, urlVideo
-            );
+            ejercicioAEditar.setNombre(nombre);
+            ejercicioAEditar.setZonaCorporal(cmbZonaCorporal.getValue());
+            ejercicioAEditar.setNivel(cmbNivel.getValue());
+            ejercicioAEditar.setTipoPeso(cmbTipoPeso.getValue());
+            ejercicioAEditar.setRepeticiones(reps);
+            ejercicioAEditar.setSeries(series);
+            ejercicioAEditar.setDescanso(descanso);
+            ejercicioAEditar.setDuracion(duracion);
+            ejercicioAEditar.setDescripcion(txtDescripcion.getText().trim());
+            ejercicioAEditar.setUrlImagen(txtUrlImagen.getText().trim());
+            ejercicioAEditar.setUrlVideo(txtUrlVideo.getText().trim());
 
-            boolean exito = dao.Actualizar(actualizado);
-            if (exito) {
-                MostrarAlerta("Éxito", "El ejercicio '" + nombre + "' fue actualizado correctamente.", Alert.AlertType.INFORMATION);
-                VolverAlCatalogo();
-            } else {
-                MostrarAlerta("Error", "No se pudo actualizar el ejercicio en la base de datos.", Alert.AlertType.ERROR);
-            }
+            resultado = dao.Actualizar(ejercicioAEditar);
         } else {
-            // Modo Insertar
             EjercicioCoach nuevo = new EjercicioCoach(
-                nombre, zona, nivel, tipoPeso,
-                reps, series, duracion, descanso,
-                descripcion, urlImagen, urlVideo
+                    nombre,
+                    cmbZonaCorporal.getValue(),
+                    cmbNivel.getValue(),
+                    cmbTipoPeso.getValue(),
+                    reps,
+                    series,
+                    duracion,
+                    descanso,
+                    txtDescripcion.getText().trim(),
+                    txtUrlImagen.getText().trim(),
+                    txtUrlVideo.getText().trim()
             );
+            resultado = dao.Agregar(nuevo);
+        }
 
-            boolean exito = dao.Agregar(nuevo);
-            if (exito) {
-                MostrarAlerta("Éxito", "El ejercicio '" + nombre + "' fue agregado exitosamente al catálogo.", Alert.AlertType.INFORMATION);
-                VolverAlCatalogo();
-            } else {
-                MostrarAlerta("Error", "No se pudo insertar el ejercicio en la base de datos.", Alert.AlertType.ERROR);
-            }
+        if (resultado) {
+            MostrarAlerta("Éxito", "Operación realizada correctamente.", Alert.AlertType.INFORMATION);
+            RegresarCatalogo();
+        } else {
+            MostrarAlerta("Error", "No se pudo guardar el ejercicio en la base de datos.", Alert.AlertType.ERROR);
         }
     }
 
     @FXML
     public void Cancelar(ActionEvent event) {
-        VolverAlCatalogo();
+        RegresarCatalogo();
     }
 
-    private void VolverAlCatalogo() {
+    private void RegresarCatalogo() {
         try {
-            ejercicioAEditar = null;
             modoEdicion = false;
+            ejercicioAEditar = null;
             App.setRoot("PantallaCoachCatalogoEjercicios");
         } catch (IOException e) {
-            MostrarAlerta("Error de Navegación", "No se pudo regresar al catálogo: " + e.getMessage(), Alert.AlertType.ERROR);
             e.printStackTrace();
         }
     }
@@ -210,7 +166,7 @@ public class PantallaCoachFormularioEjercicioController implements Initializable
         alert.showAndWait();
     }
 
-    // ── Alias camelCase para compatibilidad dual ─────────────────────────────
+    // Alias camelCase para compatibilidad
     @FXML public void guardarEjercicio(ActionEvent event) { GuardarEjercicio(event); }
     @FXML public void cancelar(ActionEvent event) { Cancelar(event); }
 }
